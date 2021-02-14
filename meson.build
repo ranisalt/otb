@@ -3,8 +3,8 @@ project('otbm', 'cpp',
     default_options: [ 'cpp_std=c++17' ]
 )
 
-headers = files('itemtype.h', 'otb.h', 'otbi.h', 'stream.h')
-sources = files('otb.cpp', 'otbi.cpp', 'stream.cpp')
+headers = files('coords.h', 'itemtype.h', 'otb.h', 'otbi.h', 'otbm.h', 'stream.h')
+sources = files('otb.cpp', 'otbi.cpp', 'otbm.cpp', 'stream.cpp')
 
 boost = dependency('boost', modules : ['iostreams'])
 fmt = dependency('fmt')
