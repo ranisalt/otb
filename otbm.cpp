@@ -160,6 +160,13 @@ enum {
   NODETYPE_WAYPOINT = 16,
 };
 
+enum {
+  TILEFLAG_PROTECTIONZONE = 1 << 0,
+  TILEFLAG_NOPVPZONE = 1 << 2,
+  TILEFLAG_NOLOGOUT = 1 << 3,
+  TILEFLAG_PVPZONE = 1 << 4,
+};
+
 uint16_t get_persistent_id(uint16_t id) {
   switch (id) {
   case ITEM_FIREFIELD_PVP_FULL:
@@ -226,12 +233,16 @@ struct House {
   std::vector<Coords> tiles;
 };
 
-auto parse_tile_area(otb::node node, const otbi::Items &items) {
+template <class T> void parse_tile_area(otb::node node, const otbi::Items &items, T &&callback) {
   auto coords = read<Coords>(node.props_begin, node.props_end);
 
-  std::unordered_map<uint32_t, House> houses;
-  Tiles tiles;
+  tsl::robin_map<uint32_t, House> houses;
+  std::optional<Tile> tile;
+  std::optional<otb::Item> ground_item;
   for (auto tile_node : node.children) {
+    tile.reset();
+    ground_item.reset();
+
     if (tile_node.type != NODETYPE_TILE and tile_node.type != NODETYPE_HOUSETILE) {
       throw std::invalid_argument(fmt::format("Unknown tile node: {:d}", tile_node.type));
     }
@@ -240,9 +251,6 @@ auto parse_tile_area(otb::node node, const otbi::Items &items) {
     uint16_t x = coords.x + read<uint8_t>(first, last);
     uint16_t y = coords.y + read<uint8_t>(first, last);
     uint8_t z = coords.z;
-
-    std::optional<Tile> tile;
-    std::optional<otb::Item> ground_item;
 
     uint32_t house_id = 0;
     if (tile_node.type == NODETYPE_HOUSETILE) {
@@ -274,7 +282,7 @@ auto parse_tile_area(otb::node node, const otbi::Items &items) {
       case ATTR_ITEM: {
         auto id = get_persistent_id(read<uint16_t>(first, last));
         auto type = items.at(id);
-        auto item = otb::Item{type};
+        auto item = otb::Item{&type};
 
         if (house_id != 0 and type.moveable()) {
           fmt::print("[Warning] Moveable item with ID {:d} in house {:d} @ {}.\n", id, house_id, Coords{x, y, z});
@@ -285,7 +293,7 @@ auto parse_tile_area(otb::node node, const otbi::Items &items) {
           } else if (type.is_ground_tile()) {
             ground_item.emplace(std::move(item));
           } else {
-            tile.emplace(ground_item.value(), tile_flags);
+            tile.emplace(*ground_item, tile_flags);
             ground_item.reset();
           }
         }
@@ -299,17 +307,17 @@ auto parse_tile_area(otb::node node, const otbi::Items &items) {
     }
 
     for (auto item_node : tile_node.children) {
-      break;
       if (item_node.type != NODETYPE_ITEM) {
         throw std::invalid_argument(fmt::format("Unknown node type: {:d}", item_node.type));
       }
 
-      fmt::print("Item node");
+      auto first = item_node.props_begin, last = item_node.props_end;
       auto id = get_persistent_id(read<uint16_t>(first, last));
       auto type = items.at(id);
-      auto item = otb::Item{type};
+      auto item = otb::Item{&type};
 
-      while (auto attr = read<uint8_t>(first, last)) {
+      while (first != last) {
+        auto attr = read<uint8_t>(first, last);
         switch (attr) {
         case ATTR_CHARGES:
         case ATTR_COUNT:
@@ -317,10 +325,9 @@ auto parse_tile_area(otb::node node, const otbi::Items &items) {
           item.subtype(read<uint8_t>(first, last));
           break;
 
-        case ATTR_ACTION_ID: {
+        case ATTR_ACTION_ID:
           item.action_id = read<uint16_t>(first, last);
           break;
-        }
 
         case ATTR_UNIQUE_ID:
           item.unique_id = read<uint16_t>(first, last);
@@ -474,18 +481,17 @@ auto parse_tile_area(otb::node node, const otbi::Items &items) {
         }
 
         default:
-          throw std::invalid_argument(fmt::format("Unknown item attribute: {:d}\n", attr));
+          std::vector<int> bytes(item_node.props_begin, item_node.props_end);
+          fmt::print("Unknown item attribute: {:d} (id: {:d}, name: {:s}, bytes: {})\n", attr, id, type.name(), fmt::join(bytes, " "));
         }
       }
     }
 
-    tiles.emplace(Coords{x, y, z}, *tile);
+    callback(Coords{x, y, z}, std::move(*tile));
   }
-  return tiles;
 }
 
-auto parse_towns(otb::node node) {
-  Towns towns;
+template <class T> void parse_towns(otb::node node, T callback) {
   for (auto town_node : node.children) {
     if (town_node.type != NODETYPE_TOWN) {
       throw std::invalid_argument(fmt::format("Unknown town node: {:d}", town_node.type));
@@ -498,14 +504,12 @@ auto parse_towns(otb::node node) {
     auto name = read_string(first, last, name_len);
 
     auto temple = read<Coords>(first, last);
-    towns.insert_or_assign(town_id, Town{town_id, name, temple});
+    callback(town_id, Town{town_id, name, temple});
     fmt::print(">>> Town {:d} ({:s} @ {})\n", town_id, name, temple);
   }
-  return towns;
 }
 
-auto parse_waypoints(otb::node node) {
-  Waypoints waypoints;
+template <class T> void parse_waypoints(otb::node node, T callback) {
   for (auto waypoint_node : node.children) {
     if (waypoint_node.type != NODETYPE_WAYPOINT) {
       throw std::invalid_argument(fmt::format("Unknown waypoint node: {:d}", waypoint_node.type));
@@ -517,10 +521,9 @@ auto parse_waypoints(otb::node node) {
     auto name = read_string(first, last, name_len);
 
     auto coords = read<Coords>(first, last);
-    waypoints.insert_or_assign(name, coords);
+    callback(std::move(name), std::move(coords));
     fmt::print(">>> Waypoint {:s}: {}.\n", name, coords);
   }
-  return waypoints;
 }
 
 } // namespace
@@ -550,13 +553,14 @@ Map load(const std::string &filename, const otbi::Items &items) {
   Tiles tiles;
   Towns towns;
   Waypoints waypoints;
+
   for (auto &node : map_node.children) {
     if (node.type == NODETYPE_TILE_AREA) {
-      tiles.merge(parse_tile_area(node, items));
+      parse_tile_area(node, items, [&](Coords &&coords, Tile &&tile) { tiles.emplace(std::move(coords), std::move(tile)); });
     } else if (node.type == NODETYPE_TOWNS) {
-      towns.merge(parse_towns(node));
+      parse_towns(node, [&](uint32_t id, Town &&town) { towns.insert_or_assign(id, std::move(town)); });
     } else if (node.type == NODETYPE_WAYPOINTS and header.version > 1) {
-      waypoints.merge(parse_waypoints(node));
+      parse_waypoints(node, [&](std::string &&name, Coords &&coords) { waypoints.insert_or_assign(std::move(name), std::move(coords)); });
     } else {
       throw std::invalid_argument(fmt::format("Unknown map node: {:d}", node.type));
     }

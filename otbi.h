@@ -4,11 +4,11 @@
 
 #include <cstdint>
 #include <string>
-#include <unordered_map>
+#include <tsl/robin_map.h>
 
 namespace otbi {
 
-using Items = std::unordered_map<uint16_t, otb::ItemType>;
+using Items = tsl::robin_map<uint16_t, otb::ItemType>;
 
 Items load(const std::string &filename);
 

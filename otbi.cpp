@@ -3,7 +3,6 @@
 #include "stream.h"
 
 #include <fmt/format.h>
-#include <unordered_map>
 
 namespace otbi {
 

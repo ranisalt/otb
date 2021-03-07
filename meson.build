@@ -14,3 +14,5 @@ run_target('format',
 )
 
 otb = library('otb', sources, dependencies : [boost, fmt])
+example = executable('example', 'example.cpp', dependencies : [fmt], link_with : [otb])
+

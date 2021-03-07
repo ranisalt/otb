@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <string>
-#include <unordered_map>
+#include <tsl/robin_map.h>
 #include <variant>
 
 namespace otb {
@@ -68,7 +68,7 @@ public:
   ItemType(std::string name, std::string description, double weight, uint32_t flags, uint16_t server_id, uint16_t client_id, uint16_t speed, uint16_t max_items,
            uint16_t rotate_to, uint16_t read_only_id, uint16_t max_text_length, uint16_t ware_id, uint8_t light_level, uint8_t light_color,
            uint8_t always_on_top_order, item_group group, item_type type)
-      : name{std::move(name)}, description{std::move(description)}, flags{flags}, server_id{server_id}, client_id{client_id}, speed{speed},
+      : name_{std::move(name)}, description{std::move(description)}, weight{weight}, flags{flags}, server_id{server_id}, client_id{client_id}, speed{speed},
         max_items{max_items}, rotate_to{rotate_to}, read_only_id{read_only_id}, max_text_length{max_text_length}, ware_id{ware_id}, light_level{light_level},
         light_color{light_color}, always_on_top_order{always_on_top_order}, group{group}, type{type} {}
 
@@ -97,8 +97,10 @@ public:
   bool is_splash() const { return group == item_group::SPLASH; }
   bool is_fluid_container() const { return group == item_group::FLUID; }
 
+  auto &name() const { return name_; }
+
 private:
-  std::string name, description;
+  std::string name_, description;
 
   double weight;
 
@@ -124,14 +126,14 @@ private:
 
 struct Item {
   Item() = default;
-  Item(const ItemType &type) : type{type}, charges{type.charges()} {}
+  Item(const ItemType *type) : type{type}, charges{type->charges()} {}
 
   void subtype(uint8_t value) {
-    if (type.is_fluid_container() or type.is_splash()) {
+    if (type->is_fluid_container() or type->is_splash()) {
       fluid_type = value;
-    } else if (type.stackable()) {
+    } else if (type->stackable()) {
       count = value;
-    } else if (type.charges() != 0) {
+    } else if (type->charges() != 0) {
       charges = value;
     } else {
       count = value;
@@ -140,8 +142,8 @@ struct Item {
 
   using attribute = std::variant<std::string, int64_t, double, bool>;
 
-  ItemType type;
-  std::unordered_map<std::string, attribute> custom_attributes;
+  const ItemType *type;
+  tsl::robin_map<std::string, attribute> custom_attributes;
   std::string text;
   std::string writer;
   std::string description;

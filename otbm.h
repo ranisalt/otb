@@ -5,16 +5,9 @@
 #include "otbi.h"
 
 #include <cstdint>
-#include <unordered_map>
+#include <tsl/robin_map.h>
 
 namespace otbm {
-
-enum {
-  TILEFLAG_PROTECTIONZONE = 1 << 0,
-  TILEFLAG_NOPVPZONE = 1 << 2,
-  TILEFLAG_NOLOGOUT = 1 << 3,
-  TILEFLAG_PVPZONE = 1 << 4,
-};
 
 enum {
   TILESTATE_NONE = 0,
@@ -77,9 +70,9 @@ struct Town {
   Coords temple;
 };
 
-using Tiles = std::unordered_map<Coords, Tile>;
-using Towns = std::unordered_map<uint16_t, Town>;
-using Waypoints = std::unordered_map<std::string, Coords>;
+using Tiles = tsl::robin_map<Coords, Tile>;
+using Towns = tsl::robin_map<uint16_t, Town>;
+using Waypoints = tsl::robin_map<std::string, Coords>;
 
 class Map {
 public:
