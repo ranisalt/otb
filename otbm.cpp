@@ -195,7 +195,7 @@ uint16_t get_persistent_id(uint16_t id) {
   }
 }
 
-auto parse_map_attributes(otb::node node) {
+auto parse_map_attributes(const otb::node &node) {
   struct {
     std::string description, spawns, houses;
   } out;
@@ -233,8 +233,9 @@ struct House {
   std::vector<Coords> tiles;
 };
 
-template <class T> void parse_tile_area(otb::node node, const otbi::Items &items, T &&callback) {
-  auto coords = read<Coords>(node.props_begin, node.props_end);
+template <class T> void parse_tile_area(const otb::node &node, const otbi::Items &items, T &&callback) {
+  auto node_begin = node.props_begin;
+  auto area_coords = read<Coords>(node_begin, node.props_end);
 
   tsl::robin_map<uint32_t, House> houses;
   std::optional<Tile> tile;
@@ -247,22 +248,22 @@ template <class T> void parse_tile_area(otb::node node, const otbi::Items &items
       throw std::invalid_argument(fmt::format("Unknown tile node: {:d}", tile_node.type));
     }
 
-    auto first = tile_node.props_begin, last = tile_node.props_end;
-    uint16_t x = coords.x + read<uint8_t>(first, last);
-    uint16_t y = coords.y + read<uint8_t>(first, last);
-    uint8_t z = coords.z;
+    auto tile_begin = tile_node.props_begin, tile_end = tile_node.props_end;
+    uint16_t x = area_coords.x + read<uint8_t>(tile_begin, tile_end);
+    uint16_t y = area_coords.y + read<uint8_t>(tile_begin, tile_end);
+    uint8_t z = area_coords.z;
 
     uint32_t house_id = 0;
     if (tile_node.type == NODETYPE_HOUSETILE) {
-      house_id = read<uint32_t>(first, last);
+      house_id = read<uint32_t>(tile_begin, tile_end);
       houses[house_id].tiles.emplace_back(x, y, z);
     }
 
     int tile_flags = TILESTATE_NONE;
-    while (first != last) {
-      switch (auto attr = read<uint8_t>(first, last)) {
+    while (tile_begin != tile_end) {
+      switch (auto attr = read<uint8_t>(tile_begin, tile_end)) {
       case ATTR_TILE_FLAGS: {
-        auto flags = read<uint32_t>(first, last);
+        auto flags = read<uint32_t>(tile_begin, tile_end);
 
         if (flags & TILEFLAG_PROTECTIONZONE) {
           tile_flags |= TILESTATE_PROTECTIONZONE;
@@ -280,7 +281,7 @@ template <class T> void parse_tile_area(otb::node node, const otbi::Items &items
       }
 
       case ATTR_ITEM: {
-        auto id = get_persistent_id(read<uint16_t>(first, last));
+        auto id = get_persistent_id(read<uint16_t>(tile_begin, tile_end));
         auto type = items.at(id);
         auto item = otb::Item{&type};
 
@@ -311,115 +312,115 @@ template <class T> void parse_tile_area(otb::node node, const otbi::Items &items
         throw std::invalid_argument(fmt::format("Unknown node type: {:d}", item_node.type));
       }
 
-      auto first = item_node.props_begin, last = item_node.props_end;
-      auto id = get_persistent_id(read<uint16_t>(first, last));
+      auto node_begin = item_node.props_begin, node_end = item_node.props_end;
+      auto id = get_persistent_id(read<uint16_t>(node_begin, node_end));
       auto type = items.at(id);
       auto item = otb::Item{&type};
 
-      while (first != last) {
-        auto attr = read<uint8_t>(first, last);
+      while (node_begin != node_end) {
+        auto attr = read<uint8_t>(node_begin, node_end);
         switch (attr) {
         case ATTR_CHARGES:
         case ATTR_COUNT:
         case ATTR_RUNE_CHARGES:
-          item.subtype(read<uint8_t>(first, last));
+          item.subtype(read<uint8_t>(node_begin, node_end));
           break;
 
         case ATTR_ACTION_ID:
-          item.action_id = read<uint16_t>(first, last);
+          item.action_id = read<uint16_t>(node_begin, node_end);
           break;
 
         case ATTR_UNIQUE_ID:
-          item.unique_id = read<uint16_t>(first, last);
+          item.unique_id = read<uint16_t>(node_begin, node_end);
           break;
 
         case ATTR_TEXT: {
-          auto len = read<uint16_t>(first, last);
-          item.text = read_string(first, last, len);
+          auto len = read<uint16_t>(node_begin, node_end);
+          item.text = read_string(node_begin, node_end, len);
           break;
         }
 
         case ATTR_WRITTENDATE:
-          item.written_at = read<uint32_t>(first, last);
+          item.written_at = read<uint32_t>(node_begin, node_end);
           break;
 
         case ATTR_WRITTENBY: {
-          auto len = read<uint16_t>(first, last);
-          item.writer = read_string(first, last, len);
+          auto len = read<uint16_t>(node_begin, node_end);
+          item.writer = read_string(node_begin, node_end, len);
           break;
         }
 
         case ATTR_DESC: {
-          auto len = read<uint16_t>(first, last);
-          item.description = read_string(first, last, len);
+          auto len = read<uint16_t>(node_begin, node_end);
+          item.description = read_string(node_begin, node_end, len);
           break;
         }
 
         case ATTR_DURATION:
-          item.duration = std::max<int32_t>(0, read<int32_t>(first, last));
+          item.duration = std::max<int32_t>(0, read<int32_t>(node_begin, node_end));
           break;
 
         case ATTR_DECAYING_STATE:
           // TODO
-          read<uint8_t>(first, last);
+          read<uint8_t>(node_begin, node_end);
           break;
 
         case ATTR_NAME: {
-          auto len = read<uint16_t>(first, last);
-          item.name = read_string(first, last, len);
+          auto len = read<uint16_t>(node_begin, node_end);
+          item.name = read_string(node_begin, node_end, len);
           break;
         }
 
         case ATTR_ARTICLE: {
-          auto len = read<uint16_t>(first, last);
-          item.article = read_string(first, last, len);
+          auto len = read<uint16_t>(node_begin, node_end);
+          item.article = read_string(node_begin, node_end, len);
           break;
         }
 
         case ATTR_PLURALNAME: {
-          auto len = read<uint16_t>(first, last);
-          item.plural_name = read_string(first, last, len);
+          auto len = read<uint16_t>(node_begin, node_end);
+          item.plural_name = read_string(node_begin, node_end, len);
           break;
         }
 
         case ATTR_WEIGHT:
-          item.weight = read<uint32_t>(first, last);
+          item.weight = read<uint32_t>(node_begin, node_end);
           break;
 
         case ATTR_ATTACK:
-          item.attack = read<int32_t>(first, last);
+          item.attack = read<int32_t>(node_begin, node_end);
           break;
 
         case ATTR_DEFENSE:
-          item.defense = read<int32_t>(first, last);
+          item.defense = read<int32_t>(node_begin, node_end);
           break;
 
         case ATTR_EXTRADEFENSE:
-          item.extra_defense = read<int32_t>(first, last);
+          item.extra_defense = read<int32_t>(node_begin, node_end);
           break;
 
         case ATTR_ARMOR:
-          item.armor = read<int32_t>(first, last);
+          item.armor = read<int32_t>(node_begin, node_end);
           break;
 
         case ATTR_HITCHANCE:
-          item.hit_chance = read<uint8_t>(first, last);
+          item.hit_chance = read<uint8_t>(node_begin, node_end);
           break;
 
         case ATTR_SHOOTRANGE:
-          item.shoot_range = read<uint8_t>(first, last);
+          item.shoot_range = read<uint8_t>(node_begin, node_end);
           break;
 
         case ATTR_DECAYTO:
-          item.decay_to = read<int32_t>(first, last);
+          item.decay_to = read<int32_t>(node_begin, node_end);
           break;
 
         case ATTR_WRAPID:
-          item.wrap_id = read<uint16_t>(first, last);
+          item.wrap_id = read<uint16_t>(node_begin, node_end);
           break;
 
         case ATTR_STOREITEM:
-          item.store_item = read<uint8_t>(first, last);
+          item.store_item = read<uint8_t>(node_begin, node_end);
           break;
 
           // these should be handled through derived classes
@@ -427,51 +428,51 @@ template <class T> void parse_tile_area(otb::node node, const otbi::Items &items
           // just read the values
 
         case ATTR_DEPOT_ID:
-          skip(first, last, 2);
+          skip(node_begin, node_end, 2);
           break;
 
         case ATTR_HOUSEDOORID:
-          skip(first, last, 1);
+          skip(node_begin, node_end, 1);
           break;
 
         case ATTR_SLEEPERGUID:
         case ATTR_SLEEPSTART:
-          skip(first, last, 4);
+          skip(node_begin, node_end, 4);
           break;
 
         case ATTR_TELE_DEST:
-          skip(first, last, 5);
+          skip(node_begin, node_end, 5);
           break;
 
         case ATTR_CONTAINER_ITEMS:
           throw std::invalid_argument("Invalid attribute: container items");
 
         case ATTR_CUSTOM_ATTRIBUTES: {
-          uint64_t len = read<uint64_t>(first, last);
+          uint64_t len = read<uint64_t>(node_begin, node_end);
 
           for (uint64_t i = 0; i < len; ++i) {
-            auto key_len = read<uint16_t>(first, last);
-            auto key = read_string(first, last, key_len);
+            auto key_len = read<uint16_t>(node_begin, node_end);
+            auto key = read_string(node_begin, node_end, key_len);
 
             auto val = otb::Item::attribute{};
 
-            switch (read<uint8_t>(first, last)) {
+            switch (read<uint8_t>(node_begin, node_end)) {
             case 1: {
-              auto val_len = read<uint16_t>(first, last);
-              val = read_string(first, last, val_len);
+              auto val_len = read<uint16_t>(node_begin, node_end);
+              val = read_string(node_begin, node_end, val_len);
               break;
             }
 
             case 2:
-              val = read<int64_t>(first, last);
+              val = read<int64_t>(node_begin, node_end);
               break;
 
             case 3:
-              val = read<double>(first, last);
+              val = read<double>(node_begin, node_end);
               break;
 
             case 4:
-              val = read<bool>(first, last);
+              val = read<bool>(node_begin, node_end);
               break;
             }
 
@@ -482,16 +483,16 @@ template <class T> void parse_tile_area(otb::node node, const otbi::Items &items
 
         default:
           std::vector<int> bytes(item_node.props_begin, item_node.props_end);
-          fmt::print("Unknown item attribute: {:d} (id: {:d}, name: {:s}, bytes: {})\n", attr, id, type.name(), fmt::join(bytes, " "));
+          fmt::print("Unknown item attribute: {:d} ({:s} @ {}, bytes: {})\n", attr, type.name(), Coords{x, y, z}, fmt::join(bytes, " "));
         }
       }
     }
 
-    callback(Coords{x, y, z}, std::move(*tile));
+    callback({x, y, z}, std::move(*tile));
   }
 }
 
-template <class T> void parse_towns(otb::node node, T callback) {
+template <class T> void parse_towns(const otb::node &node, T &&callback) {
   for (auto town_node : node.children) {
     if (town_node.type != NODETYPE_TOWN) {
       throw std::invalid_argument(fmt::format("Unknown town node: {:d}", town_node.type));
@@ -504,12 +505,12 @@ template <class T> void parse_towns(otb::node node, T callback) {
     auto name = read_string(first, last, name_len);
 
     auto temple = read<Coords>(first, last);
-    callback(town_id, Town{town_id, name, temple});
     fmt::print(">>> Town {:d} ({:s} @ {})\n", town_id, name, temple);
+    callback(town_id, {town_id, std::move(name), std::move(temple)});
   }
 }
 
-template <class T> void parse_waypoints(otb::node node, T callback) {
+template <class T> void parse_waypoints(const otb::node &node, T &&callback) {
   for (auto waypoint_node : node.children) {
     if (waypoint_node.type != NODETYPE_WAYPOINT) {
       throw std::invalid_argument(fmt::format("Unknown waypoint node: {:d}", waypoint_node.type));
@@ -521,8 +522,8 @@ template <class T> void parse_waypoints(otb::node node, T callback) {
     auto name = read_string(first, last, name_len);
 
     auto coords = read<Coords>(first, last);
-    callback(std::move(name), std::move(coords));
     fmt::print(">>> Waypoint {:s}: {}.\n", name, coords);
+    callback(std::move(name), std::move(coords));
   }
 }
 
@@ -567,7 +568,7 @@ Map load(const std::string &filename, const otbi::Items &items) {
   }
 
   fmt::print("Loaded {:d} map tiles.\n", tiles.size());
-  return {header, tiles, towns, waypoints};
+  return {std::move(header), std::move(tiles), std::move(towns), std::move(waypoints)};
 }
 
 } // namespace otbm

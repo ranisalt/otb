@@ -126,7 +126,7 @@ private:
 
 struct Item {
   Item() = default;
-  Item(const ItemType *type) : type{type}, charges{type->charges()} {}
+  explicit Item(const ItemType *type) : type{type}, charges{type->charges()} {}
 
   void subtype(uint8_t value) {
     if (type->is_fluid_container() or type->is_splash()) {

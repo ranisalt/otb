@@ -53,8 +53,8 @@ struct Header {
 
 class Tile {
 public:
-  Tile(otb::Item ground, uint32_t flags = TILESTATE_NONE) : ground{std::move(ground)}, flags{flags} {}
-  auto emplace_item(otb::Item &&item) { return items.emplace_back(item); }
+  explicit Tile(const otb::Item &ground, uint32_t flags = TILESTATE_NONE) : ground{ground}, flags{flags} {}
+  auto emplace_item(otb::Item &&item) { return items.emplace_back(std::forward<otb::Item>(item)); }
 
 private:
   std::vector<otb::Item> items = {};
@@ -63,7 +63,7 @@ private:
 };
 
 struct Town {
-  Town(uint32_t id, std::string name, Coords temple) : id{id}, name{std::move(name)}, temple{std::move(temple)} {}
+  Town(uint32_t id, std::string &&name, Coords &&temple) : id{id}, name{std::move(name)}, temple{std::move(temple)} {}
 
   uint32_t id;
   std::string name;
@@ -76,7 +76,7 @@ using Waypoints = tsl::robin_map<std::string, Coords>;
 
 class Map {
 public:
-  Map(Header header, Tiles tiles, Towns towns, Waypoints waypoints)
+  Map(Header &&header, Tiles &&tiles, Towns &&towns, Waypoints &&waypoints)
       : header{std::move(header)}, tiles{std::move(tiles)}, towns{std::move(towns)}, waypoints{std::move(waypoints)} {}
 
 private:

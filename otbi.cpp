@@ -96,14 +96,14 @@ std::pair<uint32_t, uint32_t> read_version(otb::iterator &first, const otb::iter
 Items load(const std::string &filename) {
   auto loader = otb::load(filename, "OTBI");
 
-  auto first = loader.begin();
-  const auto last = loader.end();
-  /*auto flags =*/read<uint32_t>(first, last); // unused
-  auto attr = read<uint8_t>(first, last);
+  auto root_begin = loader.begin();
+  const auto root_end = loader.end();
+  /*auto flags =*/read<uint32_t>(root_begin, root_end); // unused
+  auto root_attr = read<uint8_t>(root_begin, root_end);
 
   uint32_t major = 0, minor = 0;
-  if (attr == ROOT_ATTR_VERSION) {
-    std::tie(major, minor) = read_version(first, last);
+  if (root_attr == ROOT_ATTR_VERSION) {
+    std::tie(major, minor) = read_version(root_begin, root_end);
   }
 
   if (major == 0xFFFFFFFF) {
@@ -116,10 +116,10 @@ Items load(const std::string &filename) {
 
   auto items = Items{};
   for (const auto &item_node : loader.children()) {
-    auto first = item_node.props_begin;
-    const auto last = item_node.props_end;
+    auto node_begin = item_node.props_begin;
+    const auto node_end = item_node.props_end;
 
-    auto flags = read<uint32_t>(first, last);
+    auto flags = read<uint32_t>(node_begin, node_end);
 
     std::string name, description;
     double weight = 0;
@@ -135,9 +135,9 @@ Items load(const std::string &filename) {
     uint8_t light_color = 0;
     uint8_t always_on_top_order = 0;
 
-    while (first != last) {
-      auto attr = read<uint8_t>(first, last);
-      auto length = read<uint16_t>(first, last);
+    while (node_begin != node_end) {
+      auto attr = read<uint8_t>(node_begin, node_end);
+      auto length = read<uint16_t>(node_begin, node_end);
 
       switch (attr) {
       case ITEM_ATTR_SERVERID:
@@ -145,7 +145,7 @@ Items load(const std::string &filename) {
           throw std::invalid_argument(fmt::format("Invalid server ID attribute length: expected {:d}, got {:d}", sizeof(uint16_t), length));
         }
 
-        server_id = read<uint16_t>(first, last);
+        server_id = read<uint16_t>(node_begin, node_end);
         if (server_id > 30000 and server_id < 30100) {
           server_id -= 30000;
         }
@@ -156,7 +156,7 @@ Items load(const std::string &filename) {
           throw std::invalid_argument(fmt::format("Invalid client ID attribute length: expected {:d}, got {:d}", sizeof(uint16_t), length));
         }
 
-        client_id = read<uint16_t>(first, last);
+        client_id = read<uint16_t>(node_begin, node_end);
         break;
 
       case ITEM_ATTR_NAME: {
@@ -164,7 +164,7 @@ Items load(const std::string &filename) {
           fmt::print("Unexpected item name length: {:d}", length);
         }
 
-        name = read_string(first, last, length);
+        name = read_string(node_begin, node_end, length);
         break;
       }
 
@@ -173,7 +173,7 @@ Items load(const std::string &filename) {
           fmt::print("Unexpected item description length: {:d}", length);
         }
 
-        description = read_string(first, last, length);
+        description = read_string(node_begin, node_end, length);
         break;
       }
 
@@ -182,7 +182,7 @@ Items load(const std::string &filename) {
           throw std::invalid_argument(fmt::format("Invalid speed attribute length: expected {:d}, got {:d}", sizeof(uint16_t), length));
         }
 
-        speed = read<uint16_t>(first, last);
+        speed = read<uint16_t>(node_begin, node_end);
         break;
 
       case ITEM_ATTR_MAXITEMS:
@@ -190,7 +190,7 @@ Items load(const std::string &filename) {
           throw std::invalid_argument(fmt::format("Invalid max. items attribute length: expected {:d}, got {:d}", sizeof(uint16_t), length));
         }
 
-        max_items = read<uint16_t>(first, last);
+        max_items = read<uint16_t>(node_begin, node_end);
         break;
 
       case ITEM_ATTR_WEIGHT:
@@ -198,7 +198,7 @@ Items load(const std::string &filename) {
           throw std::invalid_argument(fmt::format("Invalid weight attribute length: expected {:d}, got {:d}", sizeof(double), length));
         }
 
-        weight = read<double>(first, last);
+        weight = read<double>(node_begin, node_end);
         break;
 
       case ITEM_ATTR_ROTATETO:
@@ -206,7 +206,7 @@ Items load(const std::string &filename) {
           throw std::invalid_argument(fmt::format("Invalid rotate to attribute length: expected {:d}, got {:d}", sizeof(uint16_t), length));
         }
 
-        rotate_to = read<uint16_t>(first, last);
+        rotate_to = read<uint16_t>(node_begin, node_end);
         break;
 
       case ITEM_ATTR_LIGHT2:
@@ -214,8 +214,8 @@ Items load(const std::string &filename) {
           throw std::invalid_argument(fmt::format("Invalid light2 attribute length: expected {:d}, got {:d}", 2 * sizeof(uint16_t), length));
         }
 
-        light_level = static_cast<uint8_t>(read<uint16_t>(first, last));
-        light_color = static_cast<uint8_t>(read<uint16_t>(first, last));
+        light_level = static_cast<uint8_t>(read<uint16_t>(node_begin, node_end));
+        light_color = static_cast<uint8_t>(read<uint16_t>(node_begin, node_end));
         break;
 
       case ITEM_ATTR_TOPORDER:
@@ -223,7 +223,7 @@ Items load(const std::string &filename) {
           throw std::invalid_argument(fmt::format("Invalid top order attribute length: expected {:d}, got {:d}", sizeof(uint8_t), length));
         }
 
-        always_on_top_order = read<uint8_t>(first, last);
+        always_on_top_order = read<uint8_t>(node_begin, node_end);
         break;
 
       case ITEM_ATTR_WRITEABLE3:
@@ -231,8 +231,8 @@ Items load(const std::string &filename) {
           throw std::invalid_argument(fmt::format("Invalid writeable3 attribute length: expected {:d}, got {:d}", 2 * sizeof(uint16_t), length));
         }
 
-        read_only_id = read<uint16_t>(first, last);
-        max_text_length = read<uint16_t>(first, last);
+        read_only_id = read<uint16_t>(node_begin, node_end);
+        max_text_length = read<uint16_t>(node_begin, node_end);
         break;
 
       case ITEM_ATTR_WAREID:
@@ -240,7 +240,7 @@ Items load(const std::string &filename) {
           throw std::invalid_argument(fmt::format("Invalid ware ID attribute length: expected {:d}, got {:d}", sizeof(uint16_t), length));
         }
 
-        ware_id = read<uint16_t>(first, last);
+        ware_id = read<uint16_t>(node_begin, node_end);
         break;
 
       case ITEM_ATTR_SPRITEHASH:
@@ -248,13 +248,13 @@ Items load(const std::string &filename) {
       case ITEM_ATTR_07:
       case ITEM_ATTR_08:
         // not implemented
-        skip(first, last, length);
+        skip(node_begin, node_end, length);
         break;
 
       default:
         fmt::print("Unknown attribute {:d} length {:d} sid {:d} cid {:d}\n", attr, length, server_id, client_id);
         // skip unknown attributes
-        skip(first, last, length);
+        skip(node_begin, node_end, length);
         break;
       }
     }
