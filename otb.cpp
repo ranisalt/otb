@@ -2,15 +2,16 @@
 
 #include <stack>
 #include <string>
+#include <string_view>
 
 namespace otb {
 
 namespace {
 
-const auto wildcard_identifier = std::string(4, '\0');
+const auto wildcard_identifier = std::string_view{"\0\0\0\0", 4};
 
-auto check_identifier(iterator first, iterator last, const std::string &accepted_identifier) {
-  auto identifier = std::string(first, last);
+auto check_identifier(iterator it, std::string_view accepted_identifier) {
+  auto identifier = std::string_view(it, 4);
   return identifier == accepted_identifier or identifier == wildcard_identifier;
 }
 
@@ -68,11 +69,11 @@ auto parse_tree(iterator first, const iterator last) {
 OTB load(const std::string &filename, const std::string &identifier) {
   auto file = mapped_file{filename};
 
-  if (not check_identifier(file.begin(), file.begin() + 4, identifier)) {
+  if (not check_identifier(file.begin(), identifier)) {
     throw std::invalid_argument("Invalid magic header.");
   }
 
-  return OTB{file, parse_tree(file.begin() + 4, file.end())};
+  return {file, parse_tree(file.begin() + 4, file.end())};
 }
 
 } // namespace otb
