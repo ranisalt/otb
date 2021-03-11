@@ -2,7 +2,7 @@
 
 #include "otb.h"
 
-template <class T> T read(otb::iterator &first, const otb::iterator &last) {
+template <class T> auto read(otb::iterator &first, const otb::iterator &last) {
   constexpr decltype(last - first) len = sizeof(T);
 
   std::string buf;

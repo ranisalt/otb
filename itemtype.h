@@ -73,23 +73,23 @@ public:
 
   auto charges() const { return charges_; }
 
-  bool block_solid() const { return flags & BLOCK_SOLID; }
-  bool block_projectile() const { return flags & BLOCK_PROJECTILE; }
-  bool block_path_find() const { return flags & BLOCK_PATHFIND; }
-  bool has_height() const { return flags & HAS_HEIGHT; }
-  bool useable() const { return flags & USEABLE; }
-  bool pickupable() const { return flags & PICKUPABLE; }
-  bool moveable() const { return flags & MOVEABLE; }
-  bool stackable() const { return flags & STACKABLE; }
-  bool always_on_top() const { return flags & ALWAYSONTOP; }
-  bool is_vertical() const { return flags & VERTICAL; }
-  bool is_horizontal() const { return flags & HORIZONTAL; }
-  bool hangable() const { return flags & HANGABLE; }
-  bool allow_dist_read() const { return flags & ALLOWDISTREAD; }
-  bool rotatable() const { return flags & ROTATABLE; }
-  bool readable() const { return flags & READABLE; }
-  bool look_through() const { return flags & LOOKTHROUGH; }
-  bool is_animation() const { return flags & ANIMATION; }
+  bool block_solid() const { return (flags & BLOCK_SOLID) != 0; }
+  bool block_projectile() const { return (flags & BLOCK_PROJECTILE) != 0; }
+  bool block_path_find() const { return (flags & BLOCK_PATHFIND) != 0; }
+  bool has_height() const { return (flags & HAS_HEIGHT) != 0; }
+  bool useable() const { return (flags & USEABLE) != 0; }
+  bool pickupable() const { return (flags & PICKUPABLE) != 0; }
+  bool moveable() const { return (flags & MOVEABLE) != 0; }
+  bool stackable() const { return (flags & STACKABLE) != 0; }
+  bool always_on_top() const { return (flags & ALWAYSONTOP) != 0; }
+  bool is_vertical() const { return (flags & VERTICAL) != 0; }
+  bool is_horizontal() const { return (flags & HORIZONTAL) != 0; }
+  bool hangable() const { return (flags & HANGABLE) != 0; }
+  bool allow_dist_read() const { return (flags & ALLOWDISTREAD) != 0; }
+  bool rotatable() const { return (flags & ROTATABLE) != 0; }
+  bool readable() const { return (flags & READABLE) != 0; }
+  bool look_through() const { return (flags & LOOKTHROUGH) != 0; }
+  bool is_animation() const { return (flags & ANIMATION) != 0; }
 
   bool is_ground_tile() const { return group == item_group::GROUND; }
   bool is_container() const { return group == item_group::CONTAINER; }

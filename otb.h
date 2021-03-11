@@ -10,9 +10,9 @@ using iterator = mapped_file::iterator;
 
 namespace detail {
 
-constexpr char ESCAPE = 0xFD;
-constexpr char START = 0xFE;
-constexpr char END = 0xFF;
+constexpr char ESCAPE = '\xFD';
+constexpr char START = '\xFE';
+constexpr char END = '\xFF';
 
 } // namespace detail
 

@@ -10,10 +10,12 @@ std::string read_string(otb::iterator &first, const otb::iterator &last, int len
   std::string out;
   out.reserve(len);
 
-  auto start = first, end = first + len;
+  auto start = first;
+  auto end = first + len;
   while (start < end) {
-    if (*start == otb::detail::ESCAPE)
+    if (*start == otb::detail::ESCAPE) {
       ++start, ++end;
+    }
     out.push_back(*start);
     ++start;
   }
@@ -27,10 +29,12 @@ void skip(otb::iterator &first, const otb::iterator &last, const int len) {
     throw std::invalid_argument("Not enough bytes to skip.");
   }
 
-  auto start = first, end = first + len;
+  auto start = first;
+  auto end = first + len;
   while (start < end) {
-    if (*start == otb::detail::ESCAPE)
+    if (*start == otb::detail::ESCAPE) {
       ++start, ++end;
+    }
     ++start;
   }
 

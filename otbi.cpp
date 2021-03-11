@@ -79,15 +79,17 @@ auto type_from_group(otb::item_group group) {
   }
 }
 
-std::pair<uint32_t, uint32_t> read_version(otb::iterator &first, const otb::iterator &last) {
+auto read_version(otb::iterator &first, const otb::iterator &last) {
+  constexpr auto VERSION_INFO_SIZE = 140;
+
   auto length = read<uint16_t>(first, last);
-  if (length != 140) {
+  if (length != VERSION_INFO_SIZE) {
     throw std::invalid_argument(fmt::format("Invalid data length for version info: expected 140, got {:d}", length));
   }
 
   auto major = read<uint32_t>(first, last);
   auto minor = read<uint32_t>(first, last);
-  skip(first, last, 132);
+  skip(first, last, VERSION_INFO_SIZE - 2 * sizeof(uint32_t));
   return std::make_pair(major, minor);
 }
 
@@ -101,12 +103,13 @@ Items load(const std::string &filename) {
   /*auto flags =*/read<uint32_t>(root_begin, root_end); // unused
   auto root_attr = read<uint8_t>(root_begin, root_end);
 
-  uint32_t major = 0, minor = 0;
+  uint32_t major = 0;
+  uint32_t minor = 0;
   if (root_attr == ROOT_ATTR_VERSION) {
     std::tie(major, minor) = read_version(root_begin, root_end);
   }
 
-  if (major == 0xFFFFFFFF) {
+  if (major == std::numeric_limits<uint32_t>::max()) {
     fmt::print("[Warning] items.otb using generic client version.\n");
   } else if (major != 3) {
     throw std::invalid_argument("Old version detected, a newer version of items.otb is required.");
@@ -121,7 +124,9 @@ Items load(const std::string &filename) {
 
     auto flags = read<uint32_t>(node_begin, node_end);
 
-    std::string name, description;
+    constexpr auto MAX_TEXT_LENGTH = 128;
+    std::string name;
+    std::string description;
     double weight = 0;
     uint16_t server_id = 0;
     uint16_t client_id = 0;
@@ -145,9 +150,11 @@ Items load(const std::string &filename) {
           throw std::invalid_argument(fmt::format("Invalid server ID attribute length: expected {:d}, got {:d}", sizeof(uint16_t), length));
         }
 
+        static constexpr auto ID_RESERVED = 30000;
+        static constexpr auto ID_RESERVED_SIZE = 100;
         server_id = read<uint16_t>(node_begin, node_end);
-        if (server_id > 30000 and server_id < 30100) {
-          server_id -= 30000;
+        if (server_id > ID_RESERVED and server_id < ID_RESERVED + ID_RESERVED_SIZE) {
+          server_id -= ID_RESERVED;
         }
         break;
 
@@ -160,7 +167,7 @@ Items load(const std::string &filename) {
         break;
 
       case ITEM_ATTR_NAME: {
-        if (length >= 128) {
+        if (length >= MAX_TEXT_LENGTH) {
           fmt::print("Unexpected item name length: {:d}", length);
         }
 
@@ -169,7 +176,7 @@ Items load(const std::string &filename) {
       }
 
       case ITEM_ATTR_DESCR: {
-        if (length >= 128) {
+        if (length >= MAX_TEXT_LENGTH) {
           fmt::print("Unexpected item description length: {:d}", length);
         }
 

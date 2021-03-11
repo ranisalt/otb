@@ -6,13 +6,15 @@
 #include <stdexcept>
 
 template <> struct fmt::formatter<otbm::Coords> {
-  constexpr auto parse(format_parse_context &ctx) {
+  static constexpr auto parse(format_parse_context &ctx) {
     // Parse the presentation format and store it in the formatter:
-    auto it = ctx.begin(), end = ctx.end();
+    auto it = ctx.begin();
+    auto end = ctx.end();
 
     // Check if reached the end of the range:
-    if (it != end && *it != '}')
+    if (it != end && *it != '}') {
       throw format_error("invalid format");
+    }
 
     // Return an iterator past the end of the parsed range:
     return it;
@@ -200,7 +202,8 @@ auto parse_map_attributes(const otb::node &node) {
     std::string description, spawns, houses;
   } out;
 
-  auto first = node.props_begin, last = node.props_end;
+  auto first = node.props_begin;
+  auto last = node.props_end;
   while (first != last) {
     switch (auto attr = read<uint8_t>(first, last)) {
     case ATTR_DESCRIPTION: {
@@ -240,7 +243,7 @@ template <class T> void parse_tile_area(const otb::node &node, const otbi::Items
   tsl::robin_map<uint32_t, House> houses;
   std::optional<Tile> tile;
   std::optional<otb::Item> ground_item;
-  for (auto tile_node : node.children) {
+  for (const auto &tile_node : node.children) {
     tile.reset();
     ground_item.reset();
 
@@ -248,7 +251,8 @@ template <class T> void parse_tile_area(const otb::node &node, const otbi::Items
       throw std::invalid_argument(fmt::format("Unknown tile node: {:d}", tile_node.type));
     }
 
-    auto tile_begin = tile_node.props_begin, tile_end = tile_node.props_end;
+    auto tile_begin = tile_node.props_begin;
+    auto tile_end = tile_node.props_end;
     uint16_t x = area_coords.x + read<uint8_t>(tile_begin, tile_end);
     uint16_t y = area_coords.y + read<uint8_t>(tile_begin, tile_end);
     uint8_t z = area_coords.z;
@@ -288,15 +292,15 @@ template <class T> void parse_tile_area(const otb::node &node, const otbi::Items
         if (house_id != 0 and type.moveable()) {
           fmt::print("[Warning] Moveable item with ID {:d} in house {:d} @ {}.\n", id, house_id, Coords{x, y, z});
           break;
+        }
+
+        if (tile) {
+          tile->emplace_item(std::move(item));
+        } else if (type.is_ground_tile()) {
+          ground_item.emplace(std::move(item));
         } else {
-          if (tile) {
-            tile->emplace_item(std::move(item));
-          } else if (type.is_ground_tile()) {
-            ground_item.emplace(std::move(item));
-          } else {
-            tile.emplace(*ground_item, tile_flags);
-            ground_item.reset();
-          }
+          tile.emplace(*ground_item, tile_flags);
+          ground_item.reset();
         }
 
         break;
@@ -307,12 +311,13 @@ template <class T> void parse_tile_area(const otb::node &node, const otbi::Items
       }
     }
 
-    for (auto item_node : tile_node.children) {
+    for (const auto &item_node : tile_node.children) {
       if (item_node.type != NODETYPE_ITEM) {
         throw std::invalid_argument(fmt::format("Unknown node type: {:d}", item_node.type));
       }
 
-      auto node_begin = item_node.props_begin, node_end = item_node.props_end;
+      auto node_begin = item_node.props_begin;
+      auto node_end = item_node.props_end;
       auto id = get_persistent_id(read<uint16_t>(node_begin, node_end));
       auto type = items.at(id);
       auto item = otb::Item{&type};
@@ -493,12 +498,13 @@ template <class T> void parse_tile_area(const otb::node &node, const otbi::Items
 }
 
 template <class T> void parse_towns(const otb::node &node, T &&callback) {
-  for (auto town_node : node.children) {
+  for (const auto &town_node : node.children) {
     if (town_node.type != NODETYPE_TOWN) {
       throw std::invalid_argument(fmt::format("Unknown town node: {:d}", town_node.type));
     }
 
-    auto first = town_node.props_begin, last = town_node.props_end;
+    auto first = town_node.props_begin;
+    auto last = town_node.props_end;
     auto town_id = read<uint32_t>(first, last);
 
     auto name_len = read<uint16_t>(first, last);
@@ -511,12 +517,13 @@ template <class T> void parse_towns(const otb::node &node, T &&callback) {
 }
 
 template <class T> void parse_waypoints(const otb::node &node, T &&callback) {
-  for (auto waypoint_node : node.children) {
+  for (const auto &waypoint_node : node.children) {
     if (waypoint_node.type != NODETYPE_WAYPOINT) {
       throw std::invalid_argument(fmt::format("Unknown waypoint node: {:d}", waypoint_node.type));
     }
 
-    auto first = waypoint_node.props_begin, last = waypoint_node.props_end;
+    auto first = waypoint_node.props_begin;
+    auto last = waypoint_node.props_end;
 
     auto name_len = read<uint16_t>(first, last);
     auto name = read_string(first, last, name_len);
@@ -537,7 +544,9 @@ Map load(const std::string &filename, const otbi::Items &items) {
   if (header.version == 0) {
     throw std::invalid_argument("This map need to be upgraded by using the latest map editor version "
                                 "to be able to load correctly.");
-  } else if (header.version > 2) {
+  }
+
+  if (header.version > 2) {
     throw std::invalid_argument("Unknown OTBM version detected.");
   }
 
