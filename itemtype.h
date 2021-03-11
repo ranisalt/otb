@@ -32,7 +32,7 @@ enum class item_group : uint8_t {
 
 enum class item_type : uint8_t { NONE, DEPOT, MAILBOX, TRASHHOLDER, CONTAINER, DOOR, MAGICFIELD, TELEPORT, BED, KEY, RUNE, LAST };
 
-struct ItemType {
+class ItemType {
   enum {
     BLOCK_SOLID = 1 << 0,
     BLOCK_PROJECTILE = 1 << 1,
@@ -64,7 +64,6 @@ struct ItemType {
   };
 
 public:
-  ItemType() = default;
   ItemType(std::string name, std::string description, double weight, uint32_t flags, uint16_t server_id, uint16_t client_id, uint16_t speed, uint16_t max_items,
            uint16_t rotate_to, uint16_t read_only_id, uint16_t max_text_length, uint16_t ware_id, uint8_t light_level, uint8_t light_color,
            uint8_t always_on_top_order, item_group group, item_type type)
@@ -105,7 +104,7 @@ private:
   double weight;
 
   uint32_t flags;
-  uint16_t charges_;
+  uint16_t charges_ = 0;
 
   uint16_t server_id;
   uint16_t client_id;
@@ -125,18 +124,15 @@ private:
 };
 
 struct Item {
-  Item() = default;
   explicit Item(const ItemType *type) : type{type}, charges{type->charges()} {}
 
   void subtype(uint8_t value) {
     if (type->is_fluid_container() or type->is_splash()) {
       fluid_type = value;
-    } else if (type->stackable()) {
+    } else if (type->stackable() or type->charges() == 0) {
       count = value;
-    } else if (type->charges() != 0) {
-      charges = value;
     } else {
-      count = value;
+      charges = value;
     }
   }
 
@@ -151,7 +147,7 @@ struct Item {
   std::string article;
   std::string plural_name;
   uint32_t written_at = 0;
-  uint32_t weight;
+  uint32_t weight = 0;
   int32_t duration = 0;
   int32_t attack = 0;
   int32_t defense = 0;

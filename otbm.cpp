@@ -557,18 +557,24 @@ Map load(const std::string &filename, const otbi::Items &items) {
 
   for (auto &node : map_node.children) {
     if (node.type == NODETYPE_TILE_AREA) {
-      parse_tile_area(node, items, [&](Coords &&coords, Tile &&tile) { tiles.emplace(std::move(coords), std::move(tile)); });
+      parse_tile_area(node, items, [&](Coords &&coords, Tile &&tile) { tiles.emplace(coords, std::move(tile)); });
     } else if (node.type == NODETYPE_TOWNS) {
-      parse_towns(node, [&](uint32_t id, Town &&town) { towns.insert_or_assign(id, std::move(town)); });
+      parse_towns(node, [&](uint32_t id, Town &&town) {
+        fmt::print(">>> Town {:d} ({:s} @ {})\n", id, town.name, town.temple);
+        towns.insert_or_assign(id, std::move(town));
+      });
     } else if (node.type == NODETYPE_WAYPOINTS and header.version > 1) {
-      parse_waypoints(node, [&](std::string &&name, Coords &&coords) { waypoints.insert_or_assign(std::move(name), std::move(coords)); });
+      parse_waypoints(node, [&](std::string &&name, Coords &&coords) {
+        fmt::print(">>> Waypoint {:s}: {}.\n", name, coords);
+        waypoints.insert_or_assign(std::move(name), coords);
+      });
     } else {
       throw std::invalid_argument(fmt::format("Unknown map node: {:d}", node.type));
     }
   }
 
   fmt::print("Loaded {:d} map tiles.\n", tiles.size());
-  return {std::move(header), std::move(tiles), std::move(towns), std::move(waypoints)};
+  return {header, std::move(tiles), std::move(towns), std::move(waypoints)};
 }
 
 } // namespace otbm

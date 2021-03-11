@@ -17,7 +17,7 @@ constexpr char END = 0xFF;
 } // namespace detail
 
 struct node {
-  node(char type, iterator props_begin) : props_begin{props_begin}, type{type} {}
+  node(char type, iterator props_begin) : props_begin{props_begin}, props_end{}, type{type} {}
 
   std::vector<node> children = {};
   iterator props_begin, props_end;
@@ -26,7 +26,7 @@ struct node {
 
 class OTB {
 public:
-  OTB(mapped_file file, node root) : file{std::move(file)}, root{std::move(root)} {}
+  OTB(const mapped_file &file, node root) : file{file}, root{std::move(root)} {}
 
   const auto &children() const { return root.children; }
   const auto &begin() const { return root.props_begin; }
