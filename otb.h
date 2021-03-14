@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/iostreams/device/mapped_file.hpp>
+#include <string_view>
 #include <vector>
 
 namespace otb {
@@ -37,6 +38,6 @@ private:
   node root;
 };
 
-OTB load(const std::string &filename, const std::string &accepted_identifier);
+OTB load(const std::string &filename, std::string_view accepted_identifier);
 
 } // namespace otb

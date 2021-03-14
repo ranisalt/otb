@@ -66,7 +66,7 @@ auto parse_tree(iterator first, const iterator last) {
 
 } // namespace
 
-OTB load(const std::string &filename, const std::string &identifier) {
+OTB load(const std::string &filename, std::string_view identifier) {
   auto file = mapped_file{filename};
 
   if (not check_identifier(file.begin(), identifier)) {
