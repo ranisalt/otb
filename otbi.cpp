@@ -168,7 +168,7 @@ Items load(const std::string &filename) {
 
       case ITEM_ATTR_NAME: {
         if (length >= MAX_TEXT_LENGTH) {
-          fmt::print("Unexpected item name length: {:d}", length);
+          fmt::print("[Warning] Unexpected item name length: {:d}", length);
         }
 
         name = read_string(node_begin, node_end, length);
@@ -177,7 +177,7 @@ Items load(const std::string &filename) {
 
       case ITEM_ATTR_DESCR: {
         if (length >= MAX_TEXT_LENGTH) {
-          fmt::print("Unexpected item description length: {:d}", length);
+          fmt::print("[Warning] Unexpected item description length: {:d}", length);
         }
 
         description = read_string(node_begin, node_end, length);
@@ -259,7 +259,7 @@ Items load(const std::string &filename) {
         break;
 
       default:
-        fmt::print("Unknown attribute {:d} length {:d} sid {:d} cid {:d}\n", attr, length, server_id, client_id);
+        fmt::print("[Warning] Unknown attribute {:d} length {:d} sid {:d} cid {:d}\n", attr, length, server_id, client_id);
         // skip unknown attributes
         skip(node_begin, node_end, length);
         break;

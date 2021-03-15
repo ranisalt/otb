@@ -487,8 +487,9 @@ template <class T> void parse_tile_area(const otb::node &node, const otbi::Items
         }
 
         default:
-          std::vector<int> bytes(item_node.props_begin, item_node.props_end);
-          fmt::print("Unknown item attribute: {:d} ({:s} @ {}, bytes: {})\n", attr, type.name(), Coords{x, y, z}, fmt::join(bytes, " "));
+          std::vector<unsigned> bytes(item_node.props_begin, item_node.props_end);
+          fmt::print("[Warning] Unknown item attribute: {:d} ({:s} @ {}, bytes: {})\n", attr, type.name(), Coords{x, y, z}, fmt::join(bytes, " "));
+          break;
         }
       }
     }
@@ -511,7 +512,6 @@ template <class T> void parse_towns(const otb::node &node, T &&callback) {
     auto name = read_string(first, last, name_len);
 
     auto temple = read<Coords>(first, last);
-    fmt::print(">>> Town {:d} ({:s} @ {})\n", town_id, name, temple);
     callback(town_id, {town_id, std::move(name), std::move(temple)});
   }
 }
@@ -529,7 +529,6 @@ template <class T> void parse_waypoints(const otb::node &node, T &&callback) {
     auto name = read_string(first, last, name_len);
 
     auto coords = read<Coords>(first, last);
-    fmt::print(">>> Waypoint {:s}: {}.\n", name, coords);
     callback(std::move(name), std::move(coords));
   }
 }
