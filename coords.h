@@ -5,7 +5,6 @@
 
 namespace otbm {
 
-#pragma pack(1)
 struct Coords {
   constexpr Coords() = default;
   constexpr Coords(uint16_t x, uint16_t y, uint8_t z) : x{x}, y{x}, z{z} {}
@@ -15,7 +14,6 @@ struct Coords {
   uint16_t y = 0;
   uint8_t z = 0;
 };
-#pragma pack()
 
 } // namespace otbm
 

@@ -236,9 +236,16 @@ struct House {
   std::vector<Coords> tiles;
 };
 
+auto read_coords(otb::iterator &first, const otb::iterator &last) {
+  auto x = read<uint16_t>(first, last);
+  auto y = read<uint16_t>(first, last);
+  auto z = read<uint8_t>(first, last);
+  return Coords{x, y, z};
+}
+
 template <class T> void parse_tile_area(const otb::node &node, const otbi::Items &items, T &&callback) {
   auto node_begin = node.props_begin;
-  auto area_coords = read<Coords>(node_begin, node.props_end);
+  auto area_coords = read_coords(node_begin, node.props_end);
 
   tsl::robin_map<uint32_t, House> houses;
   std::optional<Tile> tile;
@@ -511,8 +518,7 @@ template <class T> void parse_towns(const otb::node &node, T &&callback) {
     auto name_len = read<uint16_t>(first, last);
     auto name = read_string(first, last, name_len);
 
-    auto temple = read<Coords>(first, last);
-    callback(town_id, {town_id, std::move(name), std::move(temple)});
+    callback(town_id, {town_id, std::move(name), read_coords(first, last)});
   }
 }
 
@@ -528,8 +534,7 @@ template <class T> void parse_waypoints(const otb::node &node, T &&callback) {
     auto name_len = read<uint16_t>(first, last);
     auto name = read_string(first, last, name_len);
 
-    auto coords = read<Coords>(first, last);
-    callback(std::move(name), std::move(coords));
+    callback(std::move(name), read_coords(first, last));
   }
 }
 
