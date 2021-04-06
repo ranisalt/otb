@@ -2,7 +2,6 @@
 
 #include <stack>
 #include <string>
-#include <string_view>
 
 namespace otb {
 
@@ -66,8 +65,8 @@ auto parse_tree(iterator first, const iterator last) {
 
 } // namespace
 
-OTB load(const std::string &filename, std::string_view identifier) {
-  auto file = mapped_file{filename};
+OTB load(std::string_view filename, std::string_view identifier) {
+  auto file = mapped_file{std::string{filename}};
 
   if (not check_identifier(file.begin(), identifier)) {
     throw std::invalid_argument("Invalid magic header.");

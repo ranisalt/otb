@@ -87,6 +87,6 @@ private:
   Waypoints waypoints;
 };
 
-Map load(const std::string &filename, const otbi::Items &items);
+Map load(std::string_view filename, const otbi::Items &items);
 
 } // namespace otbm

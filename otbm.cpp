@@ -540,7 +540,7 @@ template <class T> void parse_waypoints(const otb::node &node, T &&callback) {
 
 } // namespace
 
-Map load(const std::string &filename, const otbi::Items &items) {
+Map load(std::string_view filename, const otbi::Items &items) {
   auto loader = otb::load(filename, "OTBM");
   auto first = loader.begin();
   auto header = read<Header>(first, loader.end());

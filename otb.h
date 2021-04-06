@@ -38,6 +38,6 @@ private:
   node root;
 };
 
-OTB load(const std::string &filename, std::string_view accepted_identifier);
+OTB load(std::string_view filename, std::string_view accepted_identifier);
 
 } // namespace otb

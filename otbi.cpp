@@ -95,7 +95,7 @@ auto read_version(otb::iterator &first, const otb::iterator &last) {
 
 } // namespace
 
-Items load(const std::string &filename) {
+Items load(std::string_view filename) {
   auto loader = otb::load(filename, "OTBI");
 
   auto root_begin = loader.begin();
