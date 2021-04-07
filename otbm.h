@@ -42,16 +42,6 @@ enum {
                           TILESTATE_FLOORCHANGE_WEST | TILESTATE_FLOORCHANGE_SOUTH_ALT | TILESTATE_FLOORCHANGE_EAST_ALT,
 };
 
-#pragma pack(1)
-struct Header {
-  uint32_t version;
-  uint16_t width;
-  uint16_t height;
-  uint32_t majorVersionItems;
-  uint32_t minorVersionItems;
-};
-#pragma pack()
-
 class Tile {
 public:
   explicit Tile(otb::Item ground, uint32_t flags) : ground{std::move(ground)}, flags{flags} {}
@@ -77,11 +67,9 @@ using Waypoints = tsl::robin_map<std::string, Coords>;
 
 class Map {
 public:
-  Map(const Header &header, Tiles &&tiles, Towns &&towns, Waypoints &&waypoints)
-      : header{header}, tiles{std::move(tiles)}, towns{std::move(towns)}, waypoints{std::move(waypoints)} {}
+  Map(Tiles &&tiles, Towns &&towns, Waypoints &&waypoints) : tiles{std::move(tiles)}, towns{std::move(towns)}, waypoints{std::move(waypoints)} {}
 
 private:
-  Header header;
   Tiles tiles;
   Towns towns;
   Waypoints waypoints;

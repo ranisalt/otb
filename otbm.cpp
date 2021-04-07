@@ -542,19 +542,22 @@ template <class T> void parse_waypoints(const otb::node &node, T &&callback) {
 
 Map load(std::string_view filename, const otbi::Items &items) {
   auto loader = otb::load(filename, "OTBM");
-  auto first = loader.begin();
-  auto header = read<Header>(first, loader.end());
+  auto first = loader.begin(), last = loader.end();
 
-  if (header.version == 0) {
+  auto version = read<uint32_t>(first, last);
+
+  if (version == 0) {
     throw std::invalid_argument("This map need to be upgraded by using the latest map editor version "
                                 "to be able to load correctly.");
   }
 
-  if (header.version > 2) {
+  if (version > 2) {
     throw std::invalid_argument("Unknown OTBM version detected.");
   }
 
-  fmt::print("> Map size: {:d}x{:d}.\n", header.width, header.height);
+  auto width = read<uint16_t>(first, last);
+  auto height = read<uint16_t>(first, last);
+  fmt::print("> Map size: {:d}x{:d}.\n", width, height);
 
   if (loader.children().size() != 1 or loader.children().front().type != NODETYPE_MAP_DATA) {
     throw std::invalid_argument("Could not read data node.");
@@ -576,7 +579,7 @@ Map load(std::string_view filename, const otbi::Items &items) {
         fmt::print(">>> Town {:d} ({:s} @ {})\n", id, town.name, town.temple);
         towns.insert_or_assign(id, std::move(town));
       });
-    } else if (node.type == NODETYPE_WAYPOINTS and header.version > 1) {
+    } else if (node.type == NODETYPE_WAYPOINTS and version > 1) {
       parse_waypoints(node, [&](std::string &&name, Coords &&coords) {
         fmt::print(">>> Waypoint {:s}: {}.\n", name, coords);
         waypoints.insert_or_assign(std::move(name), coords);
@@ -587,7 +590,7 @@ Map load(std::string_view filename, const otbi::Items &items) {
   }
 
   fmt::print("Loaded {:d} map tiles.\n", tiles.size());
-  return {header, std::move(tiles), std::move(towns), std::move(waypoints)};
+  return {std::move(tiles), std::move(towns), std::move(waypoints)};
 }
 
 } // namespace otbm
