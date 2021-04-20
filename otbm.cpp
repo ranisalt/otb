@@ -323,116 +323,116 @@ template <class T> void parse_tile_area(const otb::node &node, const otbi::Items
         throw std::invalid_argument(fmt::format("Unknown node type: {:d}", item_node.type));
       }
 
-      auto node_begin = item_node.props_begin;
-      auto node_end = item_node.props_end;
-      auto id = get_persistent_id(read<uint16_t>(node_begin, node_end));
+      auto item_begin = item_node.props_begin;
+      auto item_end = item_node.props_end;
+      auto id = get_persistent_id(read<uint16_t>(item_begin, item_end));
       auto type = items.at(id);
       auto item = otb::Item{&type};
 
-      while (node_begin != node_end) {
-        auto attr = read<uint8_t>(node_begin, node_end);
+      while (item_begin != item_end) {
+        auto attr = read<uint8_t>(item_begin, item_end);
         switch (attr) {
         case ATTR_CHARGES:
         case ATTR_COUNT:
         case ATTR_RUNE_CHARGES:
-          item.subtype(read<uint8_t>(node_begin, node_end));
+          item.subtype(read<uint8_t>(item_begin, item_end));
           break;
 
         case ATTR_ACTION_ID:
-          item.action_id = read<uint16_t>(node_begin, node_end);
+          item.action_id = read<uint16_t>(item_begin, item_end);
           break;
 
         case ATTR_UNIQUE_ID:
-          item.unique_id = read<uint16_t>(node_begin, node_end);
+          item.unique_id = read<uint16_t>(item_begin, item_end);
           break;
 
         case ATTR_TEXT: {
-          auto len = read<uint16_t>(node_begin, node_end);
-          item.text = read_string(node_begin, node_end, len);
+          auto len = read<uint16_t>(item_begin, item_end);
+          item.text = read_string(item_begin, item_end, len);
           break;
         }
 
         case ATTR_WRITTENDATE:
-          item.written_at = read<uint32_t>(node_begin, node_end);
+          item.written_at = read<uint32_t>(item_begin, item_end);
           break;
 
         case ATTR_WRITTENBY: {
-          auto len = read<uint16_t>(node_begin, node_end);
-          item.writer = read_string(node_begin, node_end, len);
+          auto len = read<uint16_t>(item_begin, item_end);
+          item.writer = read_string(item_begin, item_end, len);
           break;
         }
 
         case ATTR_DESC: {
-          auto len = read<uint16_t>(node_begin, node_end);
-          item.description = read_string(node_begin, node_end, len);
+          auto len = read<uint16_t>(item_begin, item_end);
+          item.description = read_string(item_begin, item_end, len);
           break;
         }
 
         case ATTR_DURATION:
-          item.duration = std::max<int32_t>(0, read<int32_t>(node_begin, node_end));
+          item.duration = std::max<int32_t>(0, read<int32_t>(item_begin, item_end));
           break;
 
         case ATTR_DECAYING_STATE:
           // TODO
-          read<uint8_t>(node_begin, node_end);
+          read<uint8_t>(item_begin, item_end);
           break;
 
         case ATTR_NAME: {
-          auto len = read<uint16_t>(node_begin, node_end);
-          item.name = read_string(node_begin, node_end, len);
+          auto len = read<uint16_t>(item_begin, item_end);
+          item.name = read_string(item_begin, item_end, len);
           break;
         }
 
         case ATTR_ARTICLE: {
-          auto len = read<uint16_t>(node_begin, node_end);
-          item.article = read_string(node_begin, node_end, len);
+          auto len = read<uint16_t>(item_begin, item_end);
+          item.article = read_string(item_begin, item_end, len);
           break;
         }
 
         case ATTR_PLURALNAME: {
-          auto len = read<uint16_t>(node_begin, node_end);
-          item.plural_name = read_string(node_begin, node_end, len);
+          auto len = read<uint16_t>(item_begin, item_end);
+          item.plural_name = read_string(item_begin, item_end, len);
           break;
         }
 
         case ATTR_WEIGHT:
-          item.weight = read<uint32_t>(node_begin, node_end);
+          item.weight = read<uint32_t>(item_begin, item_end);
           break;
 
         case ATTR_ATTACK:
-          item.attack = read<int32_t>(node_begin, node_end);
+          item.attack = read<int32_t>(item_begin, item_end);
           break;
 
         case ATTR_DEFENSE:
-          item.defense = read<int32_t>(node_begin, node_end);
+          item.defense = read<int32_t>(item_begin, item_end);
           break;
 
         case ATTR_EXTRADEFENSE:
-          item.extra_defense = read<int32_t>(node_begin, node_end);
+          item.extra_defense = read<int32_t>(item_begin, item_end);
           break;
 
         case ATTR_ARMOR:
-          item.armor = read<int32_t>(node_begin, node_end);
+          item.armor = read<int32_t>(item_begin, item_end);
           break;
 
         case ATTR_HITCHANCE:
-          item.hit_chance = read<uint8_t>(node_begin, node_end);
+          item.hit_chance = read<uint8_t>(item_begin, item_end);
           break;
 
         case ATTR_SHOOTRANGE:
-          item.shoot_range = read<uint8_t>(node_begin, node_end);
+          item.shoot_range = read<uint8_t>(item_begin, item_end);
           break;
 
         case ATTR_DECAYTO:
-          item.decay_to = read<int32_t>(node_begin, node_end);
+          item.decay_to = read<int32_t>(item_begin, item_end);
           break;
 
         case ATTR_WRAPID:
-          item.wrap_id = read<uint16_t>(node_begin, node_end);
+          item.wrap_id = read<uint16_t>(item_begin, item_end);
           break;
 
         case ATTR_STOREITEM:
-          item.store_item = read<uint8_t>(node_begin, node_end);
+          item.store_item = read<uint8_t>(item_begin, item_end);
           break;
 
           // these should be handled through derived classes
@@ -440,51 +440,51 @@ template <class T> void parse_tile_area(const otb::node &node, const otbi::Items
           // just read the values
 
         case ATTR_DEPOT_ID:
-          skip(node_begin, node_end, 2);
+          skip(item_begin, item_end, 2);
           break;
 
         case ATTR_HOUSEDOORID:
-          skip(node_begin, node_end, 1);
+          skip(item_begin, item_end, 1);
           break;
 
         case ATTR_SLEEPERGUID:
         case ATTR_SLEEPSTART:
-          skip(node_begin, node_end, 4);
+          skip(item_begin, item_end, 4);
           break;
 
         case ATTR_TELE_DEST:
-          skip(node_begin, node_end, 5);
+          skip(item_begin, item_end, 5);
           break;
 
         case ATTR_CONTAINER_ITEMS:
           throw std::invalid_argument("Invalid attribute: container items");
 
         case ATTR_CUSTOM_ATTRIBUTES: {
-          uint64_t len = read<uint64_t>(node_begin, node_end);
+          uint64_t len = read<uint64_t>(item_begin, item_end);
 
           for (uint64_t i = 0; i < len; ++i) {
-            auto key_len = read<uint16_t>(node_begin, node_end);
-            auto key = read_string(node_begin, node_end, key_len);
+            auto key_len = read<uint16_t>(item_begin, item_end);
+            auto key = read_string(item_begin, item_end, key_len);
 
             auto val = otb::Item::attribute{};
 
-            switch (read<uint8_t>(node_begin, node_end)) {
+            switch (read<uint8_t>(item_begin, item_end)) {
             case 1: {
-              auto val_len = read<uint16_t>(node_begin, node_end);
-              val = read_string(node_begin, node_end, val_len);
+              auto val_len = read<uint16_t>(item_begin, item_end);
+              val = read_string(item_begin, item_end, val_len);
               break;
             }
 
             case 2:
-              val = read<int64_t>(node_begin, node_end);
+              val = read<int64_t>(item_begin, item_end);
               break;
 
             case 3:
-              val = read<double>(node_begin, node_end);
+              val = read<double>(item_begin, item_end);
               break;
 
             case 4:
-              val = read<bool>(node_begin, node_end);
+              val = read<bool>(item_begin, item_end);
               break;
             }
 

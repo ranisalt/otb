@@ -62,7 +62,7 @@ struct Town {
 };
 
 using Tiles = tsl::robin_map<Coords, Tile>;
-using Towns = tsl::robin_map<uint16_t, Town>;
+using Towns = tsl::robin_map<uint32_t, Town>;
 using Waypoints = tsl::robin_map<std::string, Coords>;
 
 class Map {

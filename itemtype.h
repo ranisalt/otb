@@ -65,7 +65,7 @@ class ItemType {
 
 public:
   ItemType(std::string name, std::string description, double weight, uint32_t flags, uint16_t server_id, uint16_t client_id, uint16_t speed, uint16_t max_items,
-           uint16_t rotate_to, uint16_t read_only_id, uint16_t max_text_length, uint16_t ware_id, uint8_t light_level, uint8_t light_color,
+           uint16_t rotate_to, uint16_t read_only_id, uint16_t max_text_length, uint16_t ware_id, uint16_t light_level, uint16_t light_color,
            uint8_t always_on_top_order, item_group group, item_type type)
       : name_{std::move(name)}, description{std::move(description)}, weight{weight}, flags{flags}, server_id{server_id}, client_id{client_id}, speed{speed},
         max_items{max_items}, rotate_to{rotate_to}, read_only_id{read_only_id}, max_text_length{max_text_length}, ware_id{ware_id}, light_level{light_level},
@@ -114,9 +114,9 @@ private:
   uint16_t read_only_id;
   uint16_t max_text_length;
   uint16_t ware_id;
+  uint16_t light_level;
+  uint16_t light_color;
 
-  uint8_t light_level;
-  uint8_t light_color;
   uint8_t always_on_top_order;
 
   item_group group;
@@ -162,7 +162,7 @@ struct Item {
   uint16_t wrap_id = 0;
   uint8_t shoot_range = 0;
   uint8_t store_item = 0;
-  int8_t hit_chance = 0;
+  uint8_t hit_chance = 0;
 };
 
 } // namespace otb

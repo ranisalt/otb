@@ -136,8 +136,8 @@ Items load(std::string_view filename) {
     uint16_t read_only_id = 0;
     uint16_t max_text_length = 0;
     uint16_t ware_id = 0;
-    uint8_t light_level = 0;
-    uint8_t light_color = 0;
+    uint16_t light_level = 0;
+    uint16_t light_color = 0;
     uint8_t always_on_top_order = 0;
 
     while (node_begin != node_end) {
@@ -221,8 +221,8 @@ Items load(std::string_view filename) {
           throw std::invalid_argument(fmt::format("Invalid light2 attribute length: expected {:d}, got {:d}", 2 * sizeof(uint16_t), length));
         }
 
-        light_level = static_cast<uint8_t>(read<uint16_t>(node_begin, node_end));
-        light_color = static_cast<uint8_t>(read<uint16_t>(node_begin, node_end));
+        light_level = read<uint16_t>(node_begin, node_end);
+        light_color = read<uint16_t>(node_begin, node_end);
         break;
 
       case ITEM_ATTR_TOPORDER:

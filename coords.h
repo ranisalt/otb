@@ -7,7 +7,7 @@ namespace otbm {
 
 struct Coords {
   constexpr Coords() = default;
-  constexpr Coords(uint16_t x, uint16_t y, uint8_t z) : x{x}, y{x}, z{z} {}
+  constexpr Coords(uint16_t x, uint16_t y, uint8_t z) : x{x}, y{y}, z{z} {}
   constexpr bool operator==(const Coords &rhs) const { return x == rhs.x and y == rhs.y and z == rhs.z; }
 
   uint16_t x = 0;
