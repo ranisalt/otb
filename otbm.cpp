@@ -199,7 +199,7 @@ uint16_t get_persistent_id(uint16_t id) {
 
 auto parse_map_attributes(const otb::node &node) {
   struct {
-    std::string description, spawns, houses;
+    std::string description = {}, spawns = {}, houses = {};
   } out;
 
   auto first = node.props_begin;
@@ -233,7 +233,7 @@ auto parse_map_attributes(const otb::node &node) {
 }
 
 struct House {
-  std::vector<Coords> tiles;
+  std::vector<Coords> tiles = {};
 };
 
 auto read_coords(otb::iterator &first, const otb::iterator &last) {

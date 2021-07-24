@@ -20,6 +20,9 @@ constexpr char END = '\xFF';
 struct node {
   node(char type, iterator props_begin) : props_begin{props_begin}, props_end{}, type{type} {}
 
+  node(const node&) = default;
+  node& operator=(const node&) = default;
+
   std::vector<node> children = {};
   iterator props_begin, props_end;
   char type;

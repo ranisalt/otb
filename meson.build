@@ -13,6 +13,8 @@ run_target('format',
     command: ['clang-format', '-i', '-style=file', headers, sources]
 )
 
-otb = library('otb', sources, dependencies : [boost, fmt])
+otb = library('otb', sources,
+    dependencies : [boost, fmt, pugixml],
+    cpp_args : ['-Wall', '-Wconversion', '-Weffc++', '-Wextra', '-pedantic']
+)
 example = executable('example', 'example.cpp', dependencies : [fmt], link_with : [otb])
-

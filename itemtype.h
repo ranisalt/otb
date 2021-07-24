@@ -96,10 +96,22 @@ public:
   bool is_splash() const { return group == item_group::SPLASH; }
   bool is_fluid_container() const { return group == item_group::FLUID; }
 
+  auto id() const { return server_id; }
+
+  void name(std::string name) { name_ = std::move(name); }
   auto &name() const { return name_; }
 
+  void article(std::string article) { article_ = std::move(article); }
+  auto &article() const { return article_; }
+
+  void plural_name(std::string plural_name) { plural_name_ = std::move(plural_name); }
+  auto &plural_name() const { return plural_name_; }
+
 private:
-  std::string name_, description;
+  std::string name_;
+  std::string description;
+  std::string article_ = {};
+  std::string plural_name_ = {};
 
   double weight;
 
@@ -126,6 +138,9 @@ private:
 struct Item {
   explicit Item(const ItemType *type) : type{type}, charges{type->charges()} {}
 
+  Item(const Item&) = default;
+  Item& operator=(const Item&) = default;
+
   void subtype(uint8_t value) {
     if (type->is_fluid_container() or type->is_splash()) {
       fluid_type = value;
@@ -139,13 +154,13 @@ struct Item {
   using attribute = std::variant<std::string, int64_t, double, bool>;
 
   const ItemType *type;
-  tsl::robin_map<std::string, attribute> custom_attributes;
-  std::string text;
-  std::string writer;
-  std::string description;
-  std::string name;
-  std::string article;
-  std::string plural_name;
+  tsl::robin_map<std::string, attribute> custom_attributes = {};
+  std::string text = {};
+  std::string writer = {};
+  std::string description = {};
+  std::string name = {};
+  std::string article = {};
+  std::string plural_name = {};
   uint32_t written_at = 0;
   uint32_t weight = 0;
   int32_t duration = 0;
